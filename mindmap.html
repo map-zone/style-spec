@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Style JSON Spec — bản đồ tư duy</title>
+</head>
+<body>
+<div style="position:sticky;top:0;z-index:99;background:#111820;color:#cfe;font:13px system-ui,sans-serif;padding:7px 14px;display:flex;gap:16px;border-bottom:1px solid #2a3644"><b style="color:#6ea3f5">MapZone style-spec</b><a href="./index.html" style="color:#cfe;text-decoration:none">Reference</a><a href="./mindmap.html" style="color:#cfe;text-decoration:none">Mindmap</a><a href="https://github.com/map-zone/style-spec" style="color:#8aa;text-decoration:none;margin-left:auto">GitHub</a></div>
+<style>
+:root {
+  --paper: #fafbfc; --card: #ffffff; --ink: #1c2733; --muted: #5b6b7c;
+  --line: #dde4ec; --accent: #2563c9; --accent-soft: #e8effc;
+  --teal: #0e8a7d; --teal-soft: #e3f2f0;
+  --amber: #b7791f; --amber-soft: #faf1de;
+  --red: #b54141; --red-soft: #fbe9e9;
+  --code-bg: #f1f5f9;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #10161d; --card: #171f28; --ink: #dfe7ef; --muted: #93a3b4;
+    --line: #2a3644; --accent: #6ea3f5; --accent-soft: #1b2c47;
+    --teal: #4cc4b4; --teal-soft: #123531;
+    --amber: #e0b463; --amber-soft: #3a2f16;
+    --red: #e08989; --red-soft: #3d1f1f;
+    --code-bg: #1d2733;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #10161d; --card: #171f28; --ink: #dfe7ef; --muted: #93a3b4;
+  --line: #2a3644; --accent: #6ea3f5; --accent-soft: #1b2c47;
+  --teal: #4cc4b4; --teal-soft: #123531;
+  --amber: #e0b463; --amber-soft: #3a2f16;
+  --red: #e08989; --red-soft: #3d1f1f;
+  --code-bg: #1d2733;
+}
+:root[data-theme="light"] {
+  --paper: #fafbfc; --card: #ffffff; --ink: #1c2733; --muted: #5b6b7c;
+  --line: #dde4ec; --accent: #2563c9; --accent-soft: #e8effc;
+  --teal: #0e8a7d; --teal-soft: #e3f2f0;
+  --amber: #b7791f; --amber-soft: #faf1de;
+  --red: #b54141; --red-soft: #fbe9e9;
+  --code-bg: #f1f5f9;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink);
+  font: 16px/1.65 "Segoe UI Variable Text", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  margin: 0; padding: 0 20px 90px;
+}
+main { max-width: 980px; margin: 0 auto; }
+header { padding: 52px 0 8px; border-bottom: 2px solid var(--ink); margin-bottom: 8px; }
+.eyebrow {
+  font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--accent); font-weight: 600; margin: 0 0 10px;
+}
+h1 {
+  font-family: "Segoe UI Variable Display", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(30px, 5vw, 44px); font-weight: 650; letter-spacing: -.015em;
+  line-height: 1.12; margin: 0 0 14px; text-wrap: balance;
+}
+.lede { color: var(--muted); max-width: 62ch; margin: 0 0 26px; font-size: 17.5px; }
+h2 {
+  font-size: 13px; letter-spacing: .13em; text-transform: uppercase; font-weight: 700;
+  color: var(--muted); margin: 56px 0 6px; display: flex; align-items: baseline; gap: 10px;
+}
+h2 .q { color: var(--ink); font-size: 21px; letter-spacing: 0; text-transform: none; font-weight: 650; }
+h3 { font-size: 17px; margin: 26px 0 8px; font-weight: 650; }
+p { max-width: 68ch; }
+.answer {
+  border-left: 3px solid var(--accent); background: var(--accent-soft);
+  padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 14px 0 20px; max-width: 66ch;
+}
+.answer strong { color: var(--accent); }
+.diagram {
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px; margin: 18px 0; overflow-x: auto;
+}
+.diagram figcaption { font-size: 13px; color: var(--muted); padding: 8px 6px 0; }
+pre.mermaid { margin: 0; display: flex; justify-content: center; }
+code, .k {
+  font-family: ui-monospace, Consolas, "Cascadia Mono", monospace;
+  font-size: .88em; background: var(--code-bg); padding: 1px 6px; border-radius: 5px;
+}
+pre.json {
+  font-family: ui-monospace, Consolas, "Cascadia Mono", monospace; font-size: 13.5px;
+  line-height: 1.55; background: var(--code-bg); border: 1px solid var(--line);
+  border-radius: 10px; padding: 16px 18px; overflow-x: auto; margin: 14px 0;
+}
+pre.json .c { color: var(--muted); }
+pre.json .hl { color: var(--accent); font-weight: 600; }
+pre.json .hl2 { color: var(--teal); font-weight: 600; }
+table {
+  border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 14.5px;
+  font-variant-numeric: tabular-nums;
+}
+th { text-align: left; font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+     color: var(--muted); font-weight: 650; padding: 8px 12px; border-bottom: 2px solid var(--ink); }
+td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tbl-wrap { overflow-x: auto; }
+.pill { display: inline-block; font-size: 12px; font-weight: 650; padding: 2px 10px;
+        border-radius: 99px; white-space: nowrap; }
+.ok   { background: var(--teal-soft); color: var(--teal); }
+.mid  { background: var(--amber-soft); color: var(--amber); }
+.no   { background: var(--red-soft); color: var(--red); }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin: 18px 0; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
+.card h4 { margin: 0 0 6px; font-size: 15px; }
+.card h4 code { font-size: 13px; }
+.card p { font-size: 14px; color: var(--muted); margin: 0; max-width: none; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+footer { margin-top: 70px; padding-top: 16px; border-top: 1px solid var(--line);
+         font-size: 13px; color: var(--muted); }
+footer code { font-size: 12px; }
+</style>
+
+<main>
+<header>
+  <p class="eyebrow">MapZone · tài liệu nội bộ · 2026-07-08</p>
+  <h1>Style JSON — bản đồ tư duy cho một spec rối</h1>
+  <p class="lede">Toàn bộ style spec (v8 + phần mở rộng Mapbox v3) thực ra chỉ trả lời <strong>bốn câu hỏi</strong>. Trang này vẽ lại spec theo bốn câu hỏi đó, bằng số liệu đo từ chính <code>mapbox-standard.json</code> đang dùng (150 layers, 80 paint props, 136 expression ops).</p>
+</header>
+
+<h2><span class="q">Bản đồ tổng — style.json có gì?</span></h2>
+<figure class="diagram">
+<pre class="mermaid">
+mindmap
+  root((style.json))
+    (1 · DỮ LIỆU Ở ĐÂU)
+      sources — 8 nguồn
+        vector · MVT
+        raster-dem · địa hình
+        batched-model · 3D buildings
+        raster-array · icon ⛔
+      models — 32 glTF URL
+      sprite / glyphs
+    (2 · VẼ GÌ, THEO THỨ TỰ NÀO)
+      layers — 150, vẽ từ trên xuống
+        line ×74
+        symbol ×39
+        fill ×18
+        fill-extrusion ×6
+        model ×5
+        clip · building ⛔
+        slot — chỗ chèn, bỏ qua
+    (3 · VẼ NHƯ THẾ NÀO)
+      layout — hình học, bake vào tile
+      paint — màu/mờ, đổi mỗi frame
+      filter — feature nào được vẽ
+      expressions — 136 ops
+        config ×877 → bake
+        get · match · interpolate
+    (4 · MÔI TRƯỜNG 3D)
+      lights — ambient + directional
+      terrain — DEM
+      camera · projection globe
+      fog · color-theme ⛔
+</pre>
+<figcaption>⛔ = phần fork cố ý không hỗ trợ (xem mục cuối). Con số ×N = số lần xuất hiện thật trong mapbox-standard.json.</figcaption>
+</figure>
+
+<div class="answer">Cách nhớ: <strong>style.json = công thức nấu ăn</strong>. <em>Sources</em> là nguyên liệu, <em>layers</em> là các bước theo thứ tự, <em>paint/layout</em> là cách nêm từng bước, <em>lights/terrain</em> là cái bếp. Mọi field còn lại chỉ là chú thích quanh bốn thứ này.</div>
+
+<h2><span class="q">Một layer đọc thế nào trong 10 giây?</span></h2>
+<p>Mỗi layer trả lời đúng một chuỗi: <strong>lấy dữ liệu nào → lọc gì → vẽ kiểu gì → tô ra sao</strong>. Ví dụ thật — layer tường chu vi indoor:</p>
+<pre class="json">{
+  "id": "indoor-building-walls",           <span class="c">← tên duy nhất, để setPaintProperty/moveLayer</span>
+  <span class="hl">"type": "fill-extrusion"</span>,               <span class="c">← VẼ KIỂU GÌ (khối 3D)</span>
+  <span class="hl2">"source": "indoor",
+  "source-layer": "indoor_floor"</span>,          <span class="c">← LẤY DỮ LIỆU NÀO (tileset + lớp trong tile)</span>
+  "minzoom": 16,                            <span class="c">← chỉ tồn tại từ z16</span>
+  "filter": ["is-active-floor", ["get","id"]],  <span class="c">← LỌC feature (expression)</span>
+  "layout": { "visibility": "visible" },    <span class="c">← hình học/sắp đặt — quyết định lúc BUILD TILE</span>
+  "paint": {                                <span class="c">← màu mè — đổi được TỪNG FRAME, không rebuild</span>
+    "fill-extrusion-height": 3.05,
+    "fill-extrusion-color": "hsl(220, 25%, 100%)"
+  }
+}</pre>
+<div class="grid2">
+  <div class="card"><h4>Vì sao có cả <code>layout</code> lẫn <code>paint</code>?</h4>
+  <p>Ranh giới là <strong>chi phí</strong>: đổi <code>layout</code> (vd line-cap, text-field) phải build lại geometry của tile trong worker; đổi <code>paint</code> (màu, opacity, height) chỉ cập nhật uniform/buffer — tức thì. Đây là điểm gây rối số 1 của spec, và là lý do runtime API tách <code>setLayoutProperty</code>/<code>setPaintProperty</code>.</p></div>
+  <div class="card"><h4>Thứ tự mảng <code>layers</code> = thứ tự vẽ</h4>
+  <p>Phần tử sau đè lên phần tử trước (painter's algorithm), riêng khối 3D dùng depth test. Muốn label nằm trên đường → layer symbol đặt sau layer line. Không có z-index — vị trí trong mảng chính là z-index.</p></div>
+</div>
+
+<h2><span class="q">Chi tiết — 9 loại layer, loại nào vẽ gì?</span></h2>
+<p>Mỗi <code>type</code> là một pipeline render riêng (bucket + shader riêng). Xếp theo mức độ xuất hiện trong Standard:</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Type</th><th>Vẽ gì</th><th>Prop chủ lực (số lần dùng thật)</th><th>Bẫy cần nhớ</th></tr>
+  <tr><td><code>line</code> ×74</td><td>đường: road, biên giới, rail, đường đứt</td><td><code>line-width</code> ×72 · <code>line-color</code> ×74 · <code>line-dasharray</code> ×23 · <code>line-gap-width</code> ×28 (vẽ 2 vạch song song = casing)</td><td>Đường viền (casing) không phải prop — là <em>một layer line thứ hai</em> đặt trước, rộng hơn. HD roads thêm <code>line-sort-key</code> theo z_index.</td></tr>
+  <tr><td><code>symbol</code> ×39</td><td>chữ + icon, có chống đè (collision)</td><td><code>text-field</code>/<code>text-size</code>/<code>text-font</code> ×27 · <code>icon-image</code> ×26 · <code>symbol-placement</code> ×18 (point/line)</td><td>Loại phức tạp nhất spec (~40% số prop toàn spec là của symbol). Đổi hầu hết prop text/icon = <em>layout</em> = rebuild tile. Label không hiện ≠ bug — thường do collision.</td></tr>
+  <tr><td><code>fill</code> ×18</td><td>đa giác phẳng: nước, đất, sàn indoor</td><td><code>fill-color</code> ×17 · <code>fill-opacity</code> ×11 · <code>fill-pattern</code> (hatch) · <code>fill-antialias</code> ×15</td><td>Không có chiều cao. Trong fork, fill pass z-ordered có thể đè lên fill khác — security zone indoor phải chuyển sang extrusion vì vậy.</td></tr>
+  <tr><td><code>fill-extrusion</code> ×6</td><td>khối 3D từ đa giác: building, phòng indoor</td><td><code>-height</code>/<code>-base</code> (mét) · <code>-color</code> · fork thêm qua metadata: <code>-line-width</code> (tường ribbon), <code>-emissive</code>, <code>-cast-shadows</code></td><td>Khối = tường quanh outline + nắp, <em>không có đáy</em>, mặt đơn (backface-cull). Base &lt; ~0.04m bị pre-pass cull — indoor luôn dùng ≥ 0.06.</td></tr>
+  <tr><td><code>model</code> ×5</td><td>glTF: cây, tuabin gió, landmark</td><td><code>model-id</code> (trỏ section <code>models</code>) · <code>model-scale</code>/<code>-rotation</code> · <code>model-color-mix</code></td><td>Model đến từ 2 đường: vector tile có trường model (cây — GPU-instanced) hoặc source <code>batched-model</code> (3D buildings, Draco). Factory phải đăng ký ở CẢ 3 layer-manager native.</td></tr>
+  <tr><td><code>circle</code> ×2</td><td>chấm tròn vector (không cần sprite)</td><td><code>circle-radius</code> · <code>circle-color</code> · <code>circle-pitch-alignment</code></td><td>Ít dùng trong style thật — POI đã là symbol. Đừng dùng cho data dày đặc (mỗi chấm 1 quad).</td></tr>
+  <tr><td><code>background</code> ×1</td><td>màu nền toàn canvas, luôn là layer đầu</td><td><code>background-color</code> · <code>background-pattern</code></td><td>Không có source. Chỉ 1 cái, đứng đầu mảng.</td></tr>
+  <tr><td><code>raster</code> / <code>hillshade</code> / <code>heatmap</code></td><td>ảnh tile · bóng núi từ DEM · mật độ điểm</td><td>(Standard không dùng ở camera phố)</td><td>Có trong spec v8, engine hỗ trợ sẵn — chỉ xuất hiện khi style bật.</td></tr>
+  <tr><td><code>slot</code> ×3 · <code>clip</code> ×1 · <code>building</code> ×1</td><td>chỗ chèn layer · đục lỗ 3D · building thủ tục</td><td>—</td><td><span class="pill no">ngoài v8</span> — fork skip <code>slot</code>, chưa hỗ trợ <code>clip</code>/<code>building</code> (có substitute app-level).</td></tr>
+</table></div>
+<div class="answer">Quy tắc chọn type khi tự viết layer: dữ liệu là <strong>đường → line</strong>, <strong>vùng phẳng → fill</strong>, <strong>vùng có chiều cao → fill-extrusion</strong>, <strong>chữ/icon → symbol</strong>, <strong>vật thể thật 3D → model</strong>. Một feature có thể được vẽ bởi <em>nhiều layer cùng lúc</em> (sàn indoor = fill floor + extrusion walls + symbol label — 3 layer, 1 nguồn).</div>
+
+<h2><span class="q">Expression — vì sao JSON đầy ngoặc vuông lồng nhau?</span></h2>
+<p>Expression là <strong>ngôn ngữ hàm viết bằng mảng JSON</strong>, đọc như Lisp: phần tử đầu là tên hàm, phần còn lại là tham số. Chỉ cần thuộc 6 hàm là đọc được ~90% style thật:</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Hàm</th><th>Đọc là</th><th>Số lần trong Standard</th></tr>
+  <tr><td><code>["get","type"]</code></td><td>lấy thuộc tính <code>type</code> của feature</td><td>722</td></tr>
+  <tr><td><code>["match", x, a, ra, rb]</code></td><td>switch/case: x==a → ra, else rb</td><td>582</td></tr>
+  <tr><td><code>["interpolate", ["linear"], ["zoom"], 16,0, 18,3]</code></td><td>nội suy theo zoom: z16→0, z18→3</td><td>314 (zoom: 303)</td></tr>
+  <tr><td><code>["case", đk, a, b]</code></td><td>if/else</td><td>270</td></tr>
+  <tr><td><code>["config","lightPreset"]</code></td><td>đọc biến người dùng chỉnh (schema) — <em>fork bake thành hằng lúc load</em></td><td>877</td></tr>
+  <tr><td><code>["step", ["zoom"], a, 16, b]</code></td><td>bậc thang: dưới z16 → a, từ z16 → b</td><td>166</td></tr>
+</table></div>
+<div class="answer">Mẹo đọc nhanh: gặp mảng lồng sâu, <strong>đọc từ ngoài vào và chỉ hỏi "hàm gì? input camera (zoom) hay input feature (get)?"</strong> — camera-input thì cả layer đổi theo zoom; feature-input thì từng đối tượng một khác nhau (data-driven, tốn thêm buffer GPU).</div>
+
+<h2><span class="q">Style đi qua pipeline nào trước khi thành pixel?</span></h2>
+<figure class="diagram">
+<pre class="mermaid">
+flowchart LR
+  A["mapbox-standard.json<br/>(spec v3, config, lights,<br/>prop ngoài spec v8)"]
+  B["normalize<br/>mapbox_standard_compat.ts"]
+  C["style ĐÃ CHUẨN HÓA<br/>+ 26 khóa metadata maplibre:*"]
+  D["Web engine<br/>(fork MapLibre GL JS)"]
+  E["Native engine<br/>(fork maplibre-native)"]
+  A --> B --> C
+  C --> D
+  C -->|"vm-light-hd-normalized.json"| E
+  B -.->|"bake: config ×877 → hằng số<br/>lights → light + metadata<br/>prop lạ → metadata hoặc bỏ"| C
+</pre>
+<figcaption>Một cửa duy nhất: mọi thứ "ngoài spec v8" đi qua normalize và trở thành hợp đồng <code>maplibre:*</code> — native không bao giờ đọc style Mapbox thô.</figcaption>
+</figure>
+<p>Đây là điều làm spec <em>bớt</em> rối với team mình: bạn không cần nhớ spec Mapbox v3 đầy đủ — chỉ cần nhớ <strong>hợp đồng 26 khóa</strong> trong <code>STYLE-SPEC-SURFACE.md</code>. Ba nhóm chính:</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Nhóm khóa <code>maplibre:*</code></th><th>Ví dụ</th><th>Trạng thái</th></tr>
+  <tr><td>HD roads / cầu vượt</td><td><code>fill-elevation-reference</code>, <code>elevated-structures</code>, <code>bridge-*</code></td><td><span class="pill ok">web ✓ native ✓</span></td></tr>
+  <tr><td>Indoor / fill-extrusion</td><td><code>fill-extrusion-line-width</code> (tường ribbon), <code>-emissive-strength</code>, <code>-cast-shadows</code></td><td><span class="pill mid">web ✓ · native chưa</span></td></tr>
+  <tr><td>Symbol / icon / camera</td><td><code>icon-tint-enabled</code>, <code>*-occlusion-opacity</code>, <code>camera-pitch</code> (global-state)</td><td><span class="pill mid">web ✓ · native một phần</span></td></tr>
+</table></div>
+
+<h2><span class="q">Cái gì cố ý KHÔNG hỗ trợ? (để khỏi đi tìm)</span></h2>
+<div class="grid2">
+  <div class="card"><h4><span class="pill no">bỏ</span> Layer <code>clip</code> &amp; <code>building</code></h4>
+  <p>Đục lỗ 3D building trên floorplan và building thủ tục. Fork thay bằng substitute app-level (IndoorManager ẩn layer) — đủ cho nhu cầu hiện tại.</p></div>
+  <div class="card"><h4><span class="pill no">bỏ</span> <code>fog</code>, <code>color-theme</code>, <code>featuresets</code>, <code>iconsets</code></h4>
+  <p>Sương mù, LUT màu 22KB, Interactions API, icon raster-array. Không ảnh hưởng camera phố/indoor; icon đã có coverage-baking riêng.</p></div>
+  <div class="card"><h4><span class="pill no">bỏ</span> AO / flood-light / edge-radius</h4>
+  <p>Soft-shading quanh chân khối. Fork bù bằng emissive-metadata + outset 4cm cho tường ribbon — khác cơ chế, cùng kết quả nhìn.</p></div>
+  <div class="card"><h4><span class="pill mid">bẫy</span> Prop bị prune → <code>setPaintProperty</code> THROW</h4>
+  <p>Mọi prop ngoài spec v8 đã bị normalize gỡ khỏi paint. Runtime muốn chỉnh → mutate <code>layer.metadata</code> + <code>triggerRepaint()</code>, không gọi setPaintProperty.</p></div>
+</div>
+
+<h2><span class="q">Đường đọc đề xuất (30 phút nắm spec)</span></h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Bước</th><th>Đọc gì</th><th>Trả lời câu hỏi</th></tr>
+  <tr><td>1</td><td>Mindmap ở đầu trang + 1 layer thật bất kỳ trong <code>mapbox-standard.json</code></td><td>Khung 4 câu hỏi</td></tr>
+  <tr><td>2</td><td><code>STYLE-SPEC-SURFACE.md</code> §3 (26 khóa) + §5 (unsupported)</td><td>Hợp đồng web ↔ native</td></tr>
+  <tr><td>3</td><td><code>.codex/analyze-style-spec.cjs</code> — chạy lên bất kỳ style nào</td><td>Style X thực dùng gì</td></tr>
+  <tr><td>4</td><td>Spec chính thức (maplibre.org/style-spec) — tra cứu khi cần, không đọc tuần tự</td><td>Chi tiết từng prop</td></tr>
+</table></div>
+
+<footer>
+Nguồn số liệu: inventory <code>.codex/analyze-style-spec.cjs</code> chạy trên <code>mapbox/mapbox-standard.json</code> (150 layers · 80 paint props · 46 layout props · 136 expression ops · 44 config keys) · hợp đồng: <code>references/maplibre-native/STYLE-SPEC-SURFACE.md</code> @ web <code>1cd52e0</code> / native <code>f6a5b8b</code>.
+</footer>
+</main>
+
+</body>
+</html>
