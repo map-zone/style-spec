@@ -142,7 +142,7 @@ mindmap
         fill-extrusion ×6
         model ×5
         clip · building ⛔
-        slot — chỗ chèn, bỏ qua
+        slot — chỗ chèn layer (imports)
     (3 · VẼ NHƯ THẾ NÀO)
       layout — hình học, bake vào tile
       paint — màu/mờ, đổi mỗi frame
@@ -190,12 +190,12 @@ mindmap
   <tr><td><code>line</code> ×74</td><td>đường: road, biên giới, rail, đường đứt</td><td><code>line-width</code> ×72 · <code>line-color</code> ×74 · <code>line-dasharray</code> ×23 · <code>line-gap-width</code> ×28 (vẽ 2 vạch song song = casing)</td><td>Đường viền (casing) không phải prop — là <em>một layer line thứ hai</em> đặt trước, rộng hơn. HD roads thêm <code>line-sort-key</code> theo z_index.</td></tr>
   <tr><td><code>symbol</code> ×39</td><td>chữ + icon, có chống đè (collision)</td><td><code>text-field</code>/<code>text-size</code>/<code>text-font</code> ×27 · <code>icon-image</code> ×26 · <code>symbol-placement</code> ×18 (point/line)</td><td>Loại phức tạp nhất spec (~40% số prop toàn spec là của symbol). Đổi hầu hết prop text/icon = <em>layout</em> = rebuild tile. Label không hiện ≠ bug — thường do collision.</td></tr>
   <tr><td><code>fill</code> ×18</td><td>đa giác phẳng: nước, đất, sàn indoor</td><td><code>fill-color</code> ×17 · <code>fill-opacity</code> ×11 · <code>fill-pattern</code> (hatch) · <code>fill-antialias</code> ×15</td><td>Không có chiều cao. Trong fork, fill pass z-ordered có thể đè lên fill khác — security zone indoor phải chuyển sang extrusion vì vậy.</td></tr>
-  <tr><td><code>fill-extrusion</code> ×6</td><td>khối 3D từ đa giác: building, phòng indoor</td><td><code>-height</code>/<code>-base</code> (mét) · <code>-color</code> · fork thêm qua metadata: <code>-line-width</code> (tường ribbon), <code>-emissive</code>, <code>-cast-shadows</code></td><td>Khối = tường quanh outline + nắp, <em>không có đáy</em>, mặt đơn (backface-cull). Base &lt; ~0.04m bị pre-pass cull — indoor luôn dùng ≥ 0.06.</td></tr>
-  <tr><td><code>model</code> ×5</td><td>glTF: cây, tuabin gió, landmark</td><td><code>model-id</code> (trỏ section <code>models</code>) · <code>model-scale</code>/<code>-rotation</code> · <code>model-color-mix</code></td><td>Model đến từ 2 đường: vector tile có trường model (cây — GPU-instanced) hoặc source <code>batched-model</code> (3D buildings, Draco). Factory phải đăng ký ở CẢ 3 layer-manager native.</td></tr>
+  <tr><td><code>fill-extrusion</code> ×6</td><td>khối 3D từ đa giác: building, phòng indoor</td><td><code>-height</code>/<code>-base</code> (mét) · <code>-color</code> · prop Mapbox v3 thật: <code>-vertical-scale</code>, <code>-ambient-occlusion-*</code> · fork thêm qua metadata: <code>-line-width</code> (tường ribbon), <code>-emissive</code>, <code>-cast-shadows</code></td><td>Khối = tường quanh outline + nắp, <em>không có đáy</em>. Style có đèn v3 (ambient + directional) → building được chiếu sáng + đổ bóng như Mapbox. Base &lt; ~0.04m bị pre-pass cull — indoor luôn dùng ≥ 0.06.</td></tr>
+  <tr><td><code>model</code> ×5</td><td>glTF: cây, tuabin gió, landmark</td><td><code>model-id</code> (trỏ section <code>models</code>) · <code>model-scale</code>/<code>-rotation</code> · <code>model-color-mix</code></td><td>Model đến từ 2 đường: vector tile có trường model (cây — GPU-instanced) hoặc source <code>batched-model</code> (3D buildings, Draco).</td></tr>
   <tr><td><code>circle</code> ×2</td><td>chấm tròn vector (không cần sprite)</td><td><code>circle-radius</code> · <code>circle-color</code> · <code>circle-pitch-alignment</code></td><td>Ít dùng trong style thật — POI đã là symbol. Đừng dùng cho data dày đặc (mỗi chấm 1 quad).</td></tr>
   <tr><td><code>background</code> ×1</td><td>màu nền toàn canvas, luôn là layer đầu</td><td><code>background-color</code> · <code>background-pattern</code></td><td>Không có source. Chỉ 1 cái, đứng đầu mảng.</td></tr>
   <tr><td><code>raster</code> / <code>hillshade</code> / <code>heatmap</code></td><td>ảnh tile · bóng núi từ DEM · mật độ điểm</td><td>(Standard không dùng ở camera phố)</td><td>Có trong spec v8, engine hỗ trợ sẵn — chỉ xuất hiện khi style bật.</td></tr>
-  <tr><td><code>slot</code> ×3 · <code>clip</code> ×1 · <code>building</code> ×1</td><td>chỗ chèn layer · đục lỗ 3D · building thủ tục</td><td>—</td><td><span class="pill no">ngoài v8</span> — fork skip <code>slot</code>, chưa hỗ trợ <code>clip</code>/<code>building</code> (có substitute app-level).</td></tr>
+  <tr><td><code>slot</code> ×3 · <code>clip</code> ×1 · <code>building</code> ×1</td><td>chỗ chèn layer · đục lỗ 3D · building thủ tục</td><td>—</td><td><span class="pill no">ngoài v8</span> — <code>slot</code> ✓ (style có <code>imports</code> nạp thẳng, layer chèn đúng slot); chưa hỗ trợ <code>clip</code>/<code>building</code> (có substitute app-level).</td></tr>
 </table></div>
 <div class="answer">Quy tắc chọn type khi tự viết layer: dữ liệu là <strong>đường → line</strong>, <strong>vùng phẳng → fill</strong>, <strong>vùng có chiều cao → fill-extrusion</strong>, <strong>chữ/icon → symbol</strong>, <strong>vật thể thật 3D → model</strong>. Một feature có thể được vẽ bởi <em>nhiều layer cùng lúc</em> (sàn indoor = fill floor + extrusion walls + symbol label — 3 layer, 1 nguồn).</div>
 
@@ -217,23 +217,25 @@ mindmap
 <pre class="mermaid">
 flowchart LR
   A["mapbox-standard.json<br/>(spec v3, config, lights,<br/>prop ngoài spec v8)"]
-  B["normalize<br/>mapbox_standard_compat.ts"]
-  C["style ĐÃ CHUẨN HÓA<br/>+ 26 khóa metadata maplibre:*"]
+  B["chuẩn hóa khi nạp style<br/>(trong SDK web + native)"]
+  C["style ĐÃ CHUẨN HÓA<br/>+ khóa metadata maplibre:*<br/>+ prop v3 thật (building)"]
   D["Web engine<br/>(fork MapLibre GL JS)"]
-  E["Native engine<br/>(fork maplibre-native)"]
+  E["Native engine<br/>(Android / iOS)"]
   A --> B --> C
   C --> D
-  C -->|"vm-light-hd-normalized.json"| E
-  B -.->|"bake: config ×877 → hằng số<br/>lights → light + metadata<br/>prop lạ → metadata hoặc bỏ"| C
+  C --> E
+  B -.->|"bake: config → hằng số<br/>lights → light + metadata<br/>imports/slot → ghép layer<br/>prop lạ → metadata hoặc bỏ"| C
 </pre>
-<figcaption>Một cửa duy nhất: mọi thứ "ngoài spec v8" đi qua normalize và trở thành hợp đồng <code>maplibre:*</code> — native không bao giờ đọc style Mapbox thô.</figcaption>
+<figcaption>Một cửa duy nhất: style Mapbox v3 nạp thẳng vào SDK (web, Android, iOS); mọi thứ "ngoài spec v8" được chuẩn hóa thành hợp đồng <code>maplibre:*</code> hoặc prop thật giữ tên Mapbox.</figcaption>
 </figure>
-<p>Đây là điều làm spec <em>bớt</em> rối với team mình: bạn không cần nhớ spec Mapbox v3 đầy đủ — chỉ cần nhớ <strong>hợp đồng 26 khóa</strong> trong <code>STYLE-SPEC-SURFACE.md</code>. Ba nhóm chính:</p>
+<p>Đây là điều làm spec <em>bớt</em> rối với team mình: bạn không cần nhớ spec Mapbox v3 đầy đủ — chỉ cần nhớ <strong>hợp đồng <code>maplibre:*</code></strong> (xem trang Reference, mục ★ MapZone extensions) và mục <strong>★ Building 3D</strong>. Các nhóm chính:</p>
 <div class="tbl-wrap"><table>
-  <tr><th>Nhóm khóa <code>maplibre:*</code></th><th>Ví dụ</th><th>Trạng thái</th></tr>
+  <tr><th>Nhóm</th><th>Ví dụ</th><th>Trạng thái</th></tr>
   <tr><td>HD roads / cầu vượt</td><td><code>fill-elevation-reference</code>, <code>elevated-structures</code>, <code>bridge-*</code></td><td><span class="pill ok">web ✓ native ✓</span></td></tr>
+  <tr><td>Route / ribbon 3D theo làn</td><td><code>line-elevation-reference</code>, <code>line-z-offset</code>, <code>line-trim-offset</code>, <code>line-occlusion-opacity</code>, width theo <code>line-progress</code></td><td><span class="pill ok">web ✓ native ✓</span></td></tr>
+  <tr><td>Building 3D (prop thật)</td><td><code>fill-extrusion-vertical-scale</code>, <code>-ambient-occlusion-*</code>, đèn v3 + bóng đổ</td><td><span class="pill ok">web ✓ native ✓</span></td></tr>
   <tr><td>Indoor / fill-extrusion</td><td><code>fill-extrusion-line-width</code> (tường ribbon), <code>-emissive-strength</code>, <code>-cast-shadows</code></td><td><span class="pill mid">web ✓ · native chưa</span></td></tr>
-  <tr><td>Symbol / icon / camera</td><td><code>icon-tint-enabled</code>, <code>*-occlusion-opacity</code>, <code>camera-pitch</code> (global-state)</td><td><span class="pill mid">web ✓ · native một phần</span></td></tr>
+  <tr><td>Symbol / icon / camera</td><td><code>symbol-elevation-reference</code>, <code>symbol-z-offset</code>, <code>camera-pitch</code> (global-state) · <code>icon-tint-enabled</code>, <code>*-occlusion-opacity</code></td><td><span class="pill mid">nhóm đầu web ✓ native ✓ · nhóm sau web ✓</span></td></tr>
 </table></div>
 
 <h2><span class="q">Cái gì cố ý KHÔNG hỗ trợ? (để khỏi đi tìm)</span></h2>
@@ -242,25 +244,24 @@ flowchart LR
   <p>Đục lỗ 3D building trên floorplan và building thủ tục. Fork thay bằng substitute app-level (IndoorManager ẩn layer) — đủ cho nhu cầu hiện tại.</p></div>
   <div class="card"><h4><span class="pill no">bỏ</span> <code>fog</code>, <code>color-theme</code>, <code>featuresets</code>, <code>iconsets</code></h4>
   <p>Sương mù, LUT màu 22KB, Interactions API, icon raster-array. Không ảnh hưởng camera phố/indoor; icon đã có coverage-baking riêng.</p></div>
-  <div class="card"><h4><span class="pill no">bỏ</span> AO / flood-light / edge-radius</h4>
-  <p>Soft-shading quanh chân khối. Fork bù bằng emissive-metadata + outset 4cm cho tường ribbon — khác cơ chế, cùng kết quả nhìn.</p></div>
-  <div class="card"><h4><span class="pill mid">bẫy</span> Prop bị prune → <code>setPaintProperty</code> THROW</h4>
-  <p>Mọi prop ngoài spec v8 đã bị normalize gỡ khỏi paint. Runtime muốn chỉnh → mutate <code>layer.metadata</code> + <code>triggerRepaint()</code>, không gọi setPaintProperty.</p></div>
+  <div class="card"><h4><span class="pill no">bỏ</span> flood-light (đèn hắt ban đêm)</h4>
+  <p>Đèn hắt lên tường/mặt đất của building ban đêm. AO và vertical-scale ĐÃ hỗ trợ (xem ★ Building 3D); bo cạnh <code>edge-radius</code> đang phát triển.</p></div>
+  <div class="card"><h4><span class="pill mid">bẫy</span> Prop chuyển vào metadata → <code>setPaintProperty</code> có thể THROW</h4>
+  <p>Prop ngoài spec v8 nằm trong <code>metadata</code> (<code>maplibre:*</code>). Web nhận <code>setPaintProperty</code> theo tên Mapbox cho các key line/symbol; key khác → sửa <code>layer.metadata</code> + <code>triggerRepaint()</code>. Prop Building 3D là prop thật — gọi <code>setPaintProperty</code> bình thường.</p></div>
 </div>
 
 <h2><span class="q">Đường đọc đề xuất (30 phút nắm spec)</span></h2>
 <div class="tbl-wrap"><table>
   <tr><th>Bước</th><th>Đọc gì</th><th>Trả lời câu hỏi</th></tr>
   <tr><td>1</td><td>Mindmap ở đầu trang + 1 layer thật bất kỳ trong <code>mapbox-standard.json</code></td><td>Khung 4 câu hỏi</td></tr>
-  <tr><td>2</td><td><code>STYLE-SPEC-SURFACE.md</code> §3 (26 khóa) + §5 (unsupported)</td><td>Hợp đồng web ↔ native</td></tr>
-  <tr><td>3</td><td><code>.codex/analyze-style-spec.cjs</code> — chạy lên bất kỳ style nào</td><td>Style X thực dùng gì</td></tr>
+  <tr><td>2</td><td>Trang Reference: mục ★ Building 3D + ★ MapZone extensions (cuối mục: danh sách KHÔNG hỗ trợ)</td><td>Hợp đồng MapZone</td></tr>
+  <tr><td>3</td><td>Mở style của bạn, đối chiếu từng key lạ với trang Reference (ô lọc)</td><td>Style X thực dùng gì</td></tr>
   <tr><td>4</td><td>Spec chính thức (maplibre.org/style-spec) — tra cứu khi cần, không đọc tuần tự</td><td>Chi tiết từng prop</td></tr>
 </table></div>
 
 <footer>
-Nguồn số liệu: inventory <code>.codex/analyze-style-spec.cjs</code> chạy trên <code>mapbox/mapbox-standard.json</code> (150 layers · 80 paint props · 46 layout props · 136 expression ops · 44 config keys) · hợp đồng: <code>references/maplibre-native/STYLE-SPEC-SURFACE.md</code> @ web <code>1cd52e0</code> / native <code>f6a5b8b</code>.
+Nguồn số liệu: thống kê trên style Mapbox Standard (150 layers · 80 paint props · 46 layout props · 136 expression ops · 44 config keys) · cập nhật 2026-10-20.
 </footer>
 </main>
-
 </body>
 </html>
