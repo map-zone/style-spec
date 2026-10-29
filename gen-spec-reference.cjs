@@ -101,10 +101,10 @@ sections.push(section('layer', 'Layer — field chung mọi layer', 'Bộ khung 
 
 // fork notes injected per layer type
 const forkNotes = {
-  'fill-extrusion': 'Fork mở rộng qua <b>metadata</b> (không phải paint — <code>setPaintProperty</code> sẽ throw): <code>maplibre:fill-extrusion-line-width</code> (tường ribbon), <code>maplibre:fill-extrusion-emissive-strength</code>, <code>maplibre:fill-extrusion-cast-shadows</code>. Xem mục MapZone extensions.',
-  'symbol': 'Fork mở rộng qua metadata: <code>maplibre:text/icon-occlusion-opacity</code>, <code>maplibre:symbol-z-offset</code>, bộ <code>maplibre:icon-param-*</code> (two-tone POI). Xem mục MapZone extensions.',
+  'fill-extrusion': 'Fork thêm <b>property thật, giữ nguyên tên Mapbox v3</b> (dùng được với <code>setPaintProperty</code>): <code>fill-extrusion-vertical-scale</code>, bộ <code>fill-extrusion-ambient-occlusion-*</code>; style có đèn v3 (ambient + directional) thì building được chiếu sáng và đổ bóng như Mapbox — xem mục <a href="#buildings3d">★ Building 3D</a>. Qua <b>metadata</b>: <code>maplibre:fill-extrusion-line-width</code> (tường ribbon), <code>maplibre:fill-extrusion-emissive-strength</code>, <code>maplibre:fill-extrusion-cast-shadows</code> — xem mục MapZone extensions.',
+  'symbol': 'Fork mở rộng qua metadata: <code>maplibre:symbol-elevation-reference</code> + <code>maplibre:symbol-z-offset</code> (nhãn/icon nằm trên mặt đường HD, nâng theo cầu), <code>maplibre:text/icon-occlusion-opacity</code>, bộ <code>maplibre:icon-param-*</code> (two-tone POI). Xem mục MapZone extensions.',
   'fill': 'Fork: <code>maplibre:fill-emissive-strength</code>, <code>maplibre:fill-elevation-reference</code> (HD roads), <code>maplibre:elevated-structures</code> + bộ <code>bridge-*</code>.',
-  'line': 'Fork: <code>maplibre:line-emissive-strength</code>, <code>maplibre:line-elevation-reference</code>, <code>maplibre:line-width-unit</code> (mét).',
+  'line': 'Fork: <code>maplibre:line-elevation-reference</code>, <code>maplibre:line-z-offset</code>, <code>maplibre:line-trim-offset</code>, <code>maplibre:line-occlusion-opacity</code>, <code>maplibre:line-width-unit</code> (mét), <code>line-width</code> theo <code>line-progress</code> — route/ribbon 3D theo làn, xem mục MapZone extensions.',
 };
 
 // ---- Layers per type
@@ -139,8 +139,8 @@ const MODEL_PROPS = [
   ['model-elevation-reference', 'Neo model theo mặt đất hay mặt đường trên cao (HD).', [1,0,0]],
 ];
 let modelHtml = `<section id="models3d"><h2>Models 3D — <code>model</code> / <code>batched-model</code> <span class="cnt">${MODEL_PROPS.length}</span></h2>
-<p class="intro">Port từ Mapbox v3 — <b>không có trong spec v8 upstream</b>; danh sách dưới đây liệt kê từ code fork (web <code>model_style_layer_properties.g.ts</code>, native <code>model_layer_properties.cpp</code>). Đã device-verified cả 3 nền tảng với full Mapbox Standard 3D (buildings + trees + Eiffel/landmark, TestFlight 1.0(10) + emulator Vulkan).</p>
-<div class="forknote">Model đến từ <b>hai đường dữ liệu</b>: ① root <code>models</code> (32 URL glTF <code>mapbox://models/…</code>) + feature trong vector tile mang tham chiếu model → <b>GPU-instanced</b> (cây — 1 draw/mesh, commit <code>ef456ff</code>); ② source <code>batched-model</code> (tileset <code>mapbox-3dbuildings-v1</code>, nén <b>Draco</b> — vendor <code>google/draco 1.5.7</code> tại <code>vendor/draco</code>, KHÔNG có sẵn trong repo). <b>Bẫy native:</b> ModelLayerFactory phải đăng ký ở CẢ BA layer-manager (default + darwin <code>MLNStyleLayerManager.mm</code> + android <code>layer_manager.cpp</code>) — thiếu là "Null factory for type: model" và layer bị drop im lặng; SDK iOS build <code>-fno-rtti</code> nên code model không dùng dynamic_cast.</div>`;
+<p class="intro">Port từ Mapbox v3 — <b>không có trong spec v8 upstream</b>. Đã kiểm chứng trên cả 3 nền tảng với full Mapbox Standard 3D (buildings + cây + landmark).</p>
+<div class="forknote">Model đến từ <b>hai đường dữ liệu</b>: ① root <code>models</code> (map id → URL glTF) + feature trong vector tile mang tham chiếu model → vẽ GPU-instanced (ví dụ cây); ② source <code>batched-model</code> (mesh 3D building nén <b>Draco</b>).</div>`;
 for (const [k, doc, sup] of MODEL_PROPS) {
   const id = 'model3d-' + k.replace(/[^a-zA-Z0-9_-]/g, '_');
   modelHtml += `<article class="prop mz" id="${id}" data-name="${esc(k.toLowerCase())}">
@@ -149,8 +149,37 @@ for (const [k, doc, sup] of MODEL_PROPS) {
 modelHtml += `<h3 class="exprgroup">Source · batched-model</h3>
 <article class="prop mz" id="model3d-src" data-name="batched-model source">
 <h4><a href="#model3d-src"><code class="exprname">{"type":"batched-model","url":"mapbox://mapbox.mapbox-3dbuildings-v1"}</code></a></h4>${mzSupport([1,1,1])}
-<p class="doc">Tileset mesh 3D building nén Draco. Fork kèm <b>landmark conflation</b>: khi style có batched-model, fill-extrusion cùng footprint bị ép height 0 để không vẽ chồng khối lên landmark. Web: <code>batched_model_source.ts</code> · native: <code>SourceType::BatchedModel</code>.</p></article></section>`;
+<p class="doc">Tileset mesh 3D building nén Draco. Khi style có batched-model, fill-extrusion cùng footprint được hạ height 0 để không vẽ chồng khối lên landmark.</p></article></section>`;
 sections.push({ id: 'models3d', title: '★ Models 3D', count: MODEL_PROPS.length + 1, html: modelHtml });
+
+// ---- Building 3D (fill-extrusion, Mapbox v3) — property THẬT giữ tên Mapbox (không phải metadata).
+// [key, kiểu/mặc định, doc, [web, android, ios]]
+const BUILDING_PROPS = [
+  ['fill-extrusion-vertical-scale', 'paint · number · mặc định 1 · ≥ 0 · zoom-expr · transition',
+    'Nhân chiều cao + base của building. Style VietMap dùng <code>interpolate</code> zoom 15 → 0, 15.3 → 1 để building "mọc lên" khi zoom vào.', [1,1,1]],
+  ['fill-extrusion-ambient-occlusion-intensity', 'paint · number 0..1 · mặc định 0 · zoom-expr · transition',
+    'Cường độ AO: tường tối dần về phía chân, tối thêm ở góc lõm. 0 = tắt.', [1,1,1]],
+  ['fill-extrusion-ambient-occlusion-wall-radius', 'paint · number (m) · mặc định 3 · zoom-expr · transition',
+    'Chiều cao (mét) vùng chân tường bị tối khi style có đèn v3.', [1,1,1]],
+  ['fill-extrusion-ambient-occlusion-radius', 'paint · number (m) · mặc định 3 · zoom-expr · transition',
+    'Như trên khi style KHÔNG có đèn v3 (đèn legacy).', [1,1,1]],
+  ['fill-extrusion-ambient-occlusion-ground-radius', 'paint · number (m) · mặc định 3 · zoom-expr · transition',
+    'Bán kính quầng tối mềm trên mặt đất quanh chân nhà (cần đèn v3). Style VietMap: <code>step</code> zoom → 0 dưới z17, 5 từ z17.', [1,1,1]],
+  ['fill-extrusion-ambient-occlusion-ground-attenuation', 'paint · number 0..1 · mặc định 0.69 · zoom-expr · transition',
+    'Độ tắt dần của quầng tối mặt đất theo khoảng cách tới tường.', [1,1,1]],
+];
+let bldHtml = `<section id="buildings3d"><h2>Building 3D — fill-extrusion kiểu Mapbox v3 <span class="cnt">${BUILDING_PROPS.length}</span></h2>
+<p class="intro">Các key của Mapbox v3 dưới đây là <b>property thật</b> trong spec của fork, <b>giữ nguyên tên Mapbox</b>: viết thẳng trong <code>paint</code>, đổi lúc runtime bằng <code>setPaintProperty</code>. Style Mapbox v3 dùng các key này nạp thẳng vào MapZone SDK, không cần sửa. Kết quả render được đối chiếu pixel với Mapbox GL JS 3.21.</p>
+<div class="forknote"><b>Đèn v3 cho building.</b> Khi root <code>lights</code> có cả <code>ambient</code> lẫn <code>directional</code>, fill-extrusion được chiếu sáng theo mô hình ánh sáng của Mapbox v3 (đúng cả các preset ngày/đêm qua <code>config</code>; đèn và preset đổi được lúc runtime — xem nhóm <b>Đèn v3 · thời gian thực</b> trong ★ MapZone extensions). Style không có cặp đèn này giữ cách tô cũ, không đổi gì.<br>
+<b>Bóng đổ.</b> Khi đèn <code>directional</code> có <code>cast-shadows: true</code> (độ đậm theo <code>shadow-intensity</code>), building đổ bóng xuống mặt đất và lên tường building khác — cả building nằm ngoài màn hình theo hướng sáng. Đặt <code>maplibre:fill-extrusion-cast-shadows</code> = <code>false</code> trong metadata của layer để loại layer đó khỏi bóng đổ (web).<br>
+Native: chỉ hỗ trợ trên Vulkan (Android) và Metal (iOS). Building dùng <code>fill-extrusion-pattern</code> chưa có AO và bóng trên native.</div>`;
+for (const [k, kind, doc, sup] of BUILDING_PROPS) {
+  const id = 'bld3d-' + k.replace(/[^a-zA-Z0-9_-]/g, '_');
+  bldHtml += `<article class="prop mz" id="${id}" data-name="${esc(k.toLowerCase())}">
+    <h4><a href="#${id}"><code class="exprname">${esc(k)}</code></a></h4><div class="chips"><span class="chip">${esc(kind)}</span><span class="chip new">mới 10/2026</span></div>${mzSupport(sup)}<p class="doc">${doc}</p></article>`;
+}
+bldHtml += '</section>';
+sections.push({ id: 'buildings3d', title: '★ Building 3D', count: BUILDING_PROPS.length, html: bldHtml });
 
 // ---- Expressions grouped
 const groups = {};
@@ -186,27 +215,51 @@ const EXT = [
   ['HD roads / cầu vượt', [
     ['maplibre:fill-elevation-reference', 'Gate đưa feature của layer fill vào elevated stream (hd-road).', [1,1,1]],
     ['maplibre:line-elevation-reference', 'Như trên cho line.', [1,1,1]],
-    ['maplibre:circle-elevation-reference / maplibre:symbol-elevation-reference', 'Như trên cho circle/symbol.', [1,0,0]],
+    ['maplibre:circle-elevation-reference', 'Như trên cho circle.', [1,0,0]],
     ['maplibre:elevated-structures', 'Layer sinh parapet/deck cầu.', [1,1,1]],
     ['maplibre:bridge-structure-width-meters · -surface · maplibre:bridge-guard-rail-enabled', 'Thông số mesh cầu; guard-rail expr eval tại bucket zoom.', [1,1,1]],
-    ['maplibre:line-width-unit', '"meters" → line-width theo mét thực.', [1,1,1]],
+    ['maplibre:line-width-unit', '"meters" → line-width (và line-blur, pattern) theo mét thực.', [1,1,1]],
+  ]],
+  ['Route / ribbon 3D theo làn (line Mapbox v3)', [
+    ['maplibre:line-elevation-reference = "ground" | "sea"', 'Line nổi trong không gian 3D theo <code>maplibre:line-z-offset</code> (thay vì dán trên mặt đất); <code>"hd-road-markup"</code> = bám mặt đường HD như vạch sơn.', [1,1,1]],
+    ['maplibre:line-z-offset', 'Độ cao (mét) của line: số, hoặc expression theo <code>line-progress</code> / <code>at-interpolated</code> để cao độ thay đổi dọc tuyến (route lên/xuống cầu). Cần source GeoJSON <code>lineMetrics: true</code>.', [1,1,1]],
+    ['line-width theo line-progress', 'Spec <code>line-width</code> nhận expression theo <code>["line-progress"]</code> → bề rộng thay đổi dọc tuyến (ribbon thu hẹp/mở rộng theo làn). Cần <code>lineMetrics: true</code>.', [1,1,1]],
+    ['maplibre:line-trim-offset · maplibre:line-trim-color · maplibre:line-trim-fade-range', '<code>[start, end]</code> theo line-progress: đoạn trong khoảng được tô màu trim (mặc định trong suốt) — dùng để "ăn dần" đoạn route đã đi; đổi mỗi frame không cần setData.', [1,1,1]],
+    ['maplibre:line-occlusion-opacity', '≠ 0: phần line bị building / cầu che vẫn hiện mờ với độ mờ này (route không biến mất sau cầu vượt).', [1,1,1]],
+    ['maplibre:line-cross-slope', 'Hằng số; có giá trị thì join tròn ngắn được đổi thành miter như Mapbox.', [1,1,1]],
+    ['expression at-interpolated', '<code>["at-interpolated", index, array]</code>: index nguyên → phần tử đó; index lẻ → nội suy tuyến tính giữa 2 phần tử kề. Dùng với mảng cao độ/bề rộng theo điểm gãy.', [1,1,1]],
+    ['GeoJSON + hd_road_elevation', 'Feature GeoJSON có <code>3d_elevation_id</code> và <code>source: "elevation"</code> được tách sang layer ảo <code>hd_road_elevation</code> → line <code>hd-road-markup</code> từ GeoJSON cũng nâng theo cầu.', [1,1,1]],
   ]],
   ['Indoor / fill-extrusion', [
     ['maplibre:fill-extrusion-line-width', 'Tường RIBBON: extrude chỉ đường bao dày W mét (winding-normalized, outset 4cm).', [1,0,0]],
     ['maplibre:fill-extrusion-emissive-strength', 'Lerp màu lit → màu phẳng (uniform u_emissive_strength; hằng số/zoom-expr).', [1,0,0]],
     ['maplibre:fill-extrusion-cast-shadows', 'false = loại khỏi shadow-caster pass (Standard flag false cho mọi layer indoor).', [1,0,0]],
     ['maplibre:fill-extrusion-line-skip-shared', 'Gate skip cạnh seam (hiện false — Mapbox vẽ tường mọi cạnh).', [1,0,0]],
-    ['maplibre:fill-emissive-strength · maplibre:line-emissive-strength', 'Emissive cho fill/line (draw đọc mỗi frame).', [1,0,0]],
   ]],
   ['Symbol / icon / camera', [
     ['maplibre:text-occlusion-opacity · maplibre:icon-occlusion-opacity', 'Depth-occlusion cho label (0/0.1).', [1,0,0]],
-    ['maplibre:symbol-z-offset', 'Label nâng theo cầu.', [1,0,0]],
+    ['maplibre:symbol-elevation-reference = "hd-road-markup" | "ground" | "sea"', '<code>"hd-road-markup"</code>: nhãn/icon nằm trên mặt đường HD (mũi tên sơn, điểm nhấn route), nghiêng theo dốc, che bởi cầu; va chạm nhãn tính ở đúng độ cao đó. <code>"ground"</code>/<code>"sea"</code>: không nâng.', [1,1,1]],
+    ['maplibre:symbol-z-offset', 'Nâng nhãn/icon lên một độ cao (mét; số hoặc expression theo feature) — va chạm nhãn tính ở độ cao đó.', [1,1,1]],
     ['maplibre:icon-tint-enabled · maplibre:icon-param-icon · maplibre:icon-param-icon-stroke', 'Two-tone POI remap — scheme NEUTRAL native-parity (#a7a7a7): native vốn render neutral nên hành vi trùng.', [1,1,1]],
-    ['maplibre:distance-from-center-filter + global-state maplibre:camera-pitch / maplibre:distance-from-center', 'Filter camera của Mapbox → global-state cập nhật mỗi frame.', [1,0,0]],
+    ['global-state maplibre:camera-pitch', 'Filter camera của Mapbox (theo pitch) → global-state cập nhật mỗi frame.', [1,1,1]],
+    ['maplibre:distance-from-center-filter', 'Lọc nhãn theo khoảng cách tới tâm màn hình, tính lúc đặt nhãn.', [1,0,0]],
+    ['["image", ảnh-1, ảnh-2] + *-cross-fade', 'Biểu thức <code>image</code> có 2 tên ảnh là <b>cặp ảnh trộn theo</b> <code>icon-image-cross-fade</code> / <code>*-pattern-cross-fade</code> của Mapbox (không phải danh sách dự phòng): fork chọn ảnh theo giá trị cross-fade ở cấu hình mặc định (&gt; 0.5 → ảnh 2).', [1,1,1]],
+  ]],
+  ['Đèn v3 · thời gian thực (từ 13.3.1-mapzone.5)', [
+    ['lights (root) — đổi lúc runtime', 'Thay toàn bộ <code>lights</code> (ambient + directional) khi đang chạy, không tải lại style: bản đồ vẽ y như style được tải với các đèn đó. Web <code>map.setLights(lights)</code> / <code>getLights()</code>; Android <code>Style.setLights(json)</code> / <code>getLights()</code>; iOS <code>MLNStyle.lights</code>.', [1,1,1]],
+    ['Mặt trời theo giờ thật', 'Đặt đèn theo vị trí thật của mặt trời tại một thời điểm và toạ độ (thường là tâm camera): hướng nắng, màu, cường độ chuyển dần đêm → bình minh → ngày → hoàng hôn, ban đêm là ánh trăng; <code>lightPreset</code> của style được đặt theo. Gọi được mỗi khung hình (chỉ áp lại khi mặt trời dịch ≥ 0,5° hoặc màu đổi thấy được). Web <code>map.setSun(time, lngLat)</code>; Android <code>Style.setSun(epochMillis, lat, lng)</code>; iOS <code>-[MLNStyle setSunWithDate:latitude:longitude:]</code>.', [1,1,1]],
+    ['["config", "lightPreset"] — đổi lúc runtime', 'Biểu thức <code>["config", "lightPreset"]</code> trong layer cập nhật khi đổi preset (<code>dawn</code> / <code>day</code> / <code>dusk</code> / <code>night</code>), không tải lại style. Web <code>map.setConfigProperty(\'basemap\', \'lightPreset\', \'night\')</code> / <code>getConfigProperty</code>; Android <code>Style.setLightPreset</code> / <code>getLightPreset</code>; iOS <code>MLNStyle.lightPreset</code>. Các <code>config</code> khác vẫn cố định từ lúc tải style.', [1,1,1]],
+    ['["measure-light", "brightness"]', 'Độ sáng của đèn hiện tại, tính như Mapbox; cập nhật khi đổi đèn, preset, mặt trời hoặc zoom (dùng đổi màu nhãn / layer theo ngày–đêm).', [1,1,1]],
+    ['Chiếu sáng lớp 2D (fill / line)', 'Style có cả đèn <code>ambient</code> lẫn <code>directional</code>: fill và line được chiếu sáng như Mapbox — ban đêm mặt đất, mặt đường tối đi. Style không có cặp đèn này giữ nguyên màu.', [1,1,1]],
+    ['fill-emissive-strength · line-emissive-strength', 'Viết thẳng trong <code>paint</code> của style Mapbox v3 (fork lưu ở <code>maplibre:fill-emissive-strength</code> / <code>maplibre:line-emissive-strength</code>): 0 = chiếu sáng hoàn toàn theo đèn v3, 1 = giữ nguyên màu của layer; hằng số hoặc theo zoom. Chỉ có tác dụng khi style có đèn v3.', [1,1,1]],
+    ['Bóng đổ của đường HD trên cao', 'Đèn <code>directional</code> có <code>cast-shadows: true</code>: cầu / đường trên cao đổ bóng xuống mặt đất và các lớp 2D bên dưới (độ đậm theo <code>shadow-intensity</code>).', [1,1,1]],
+    ['Android: Style.setStandardLightShadowsEnabled(boolean)', 'Bật / tắt bóng đổ của đèn v3 lúc runtime (tiết kiệm GPU / pin trên máy yếu).', [0,1,0]],
   ]],
   ['Root / khác', [
     ['maplibre:mapbox-standard-lights (root metadata)', 'Lights v3 đã resolve config — native parse thành standard-lights.', [1,1,1]],
     ['maplibre:camera-projection = "orthographic"', 'Từ section camera của Mapbox.', [1,0,0]],
+    ['imports · slot · maplibre:slots', 'Style Mapbox v3 có <code>imports</code> (ví dụ nền SD + lớp HD) nạp thẳng được; layer có <code>slot</code> được chèn đúng vị trí slot. Runtime: thêm layer vào slot (web <code>addLayer({slot})</code>; Android <code>Style.addLayerToSlot</code>; iOS <code>-[MLNStyle addLayer:toSlot:]</code>).', [1,1,1]],
+    ['state · global-state', 'Biến toàn cục của style (<code>state</code> ở root) đọc bằng expression <code>["global-state", tên]</code>; đổi lúc runtime: web <code>setGlobalStateProperty</code>, Android <code>Style.setGlobalStateProperty</code>, iOS <code>-[MLNStyle setGlobalStateValue:forProperty:]</code>.', [1,1,1]],
   ]],
 ];
 function mzSupport([w, a, i]) {
@@ -215,8 +268,9 @@ function mzSupport([w, a, i]) {
     `<span class="plat ${a ? 'ok' : 'no'}">Android ${a ? '✓' : '✗'}</span>` +
     `<span class="plat ${i ? 'ok' : 'no'}">iOS ${i ? '✓' : '✗'}</span></div>`;
 }
-let extHtml = `<section id="mapzone"><h2>MapZone extensions — hợp đồng <code>maplibre:*</code> <span class="cnt">26</span></h2>
-<p class="intro">Prop Mapbox v3 ngoài spec v8 được normalize (<code>mapbox_standard_compat.ts</code>) preserve vào <code>metadata</code> của layer. <b>Bẫy:</b> chúng KHÔNG phải paint prop — <code>setPaintProperty</code> sẽ throw; runtime mutate <code>layer.metadata</code> + <code>triggerRepaint()</code>. Nguồn sự thật: <code>references/maplibre-native/STYLE-SPEC-SURFACE.md</code>.</p>`;
+const EXT_COUNT = EXT.reduce((n, [, items]) => n + items.length, 0);
+let extHtml = `<section id="mapzone"><h2>MapZone extensions — hợp đồng <code>maplibre:*</code> <span class="cnt">${EXT_COUNT}</span></h2>
+<p class="intro">Key Mapbox v3 nằm ngoài spec v8 được SDK tự chuyển (khi nạp style) vào <code>metadata</code> của layer với tiền tố <code>maplibre:</code>; style Mapbox gốc nạp thẳng được. Đổi lúc runtime: web nhận <code>setPaintProperty</code>/<code>setLayoutProperty</code> với tên key Mapbox cho các key line/symbol ở dưới; key khác sửa <code>layer.metadata</code> rồi <code>triggerRepaint()</code>. Android/iOS có API riêng cho line/symbol (ví dụ Android <code>LineMapboxProperties</code>, iOS category <code>MLNLineStyleLayer</code>).</p>`;
 for (const [g, items] of EXT) {
   extHtml += `<h3 class="exprgroup">${esc(g)}</h3>`;
   for (const [k, doc, sup] of items) {
@@ -226,8 +280,8 @@ for (const [g, items] of EXT) {
   }
 }
 extHtml += `<h3 class="exprgroup">Cố ý KHÔNG hỗ trợ (đừng tìm trong fork)</h3>
-<p class="doc" style="max-width:72ch">Layer <code>clip</code>/<code>building</code>/<code>slot</code>; source <code>raster-array</code>; <code>fog</code>, <code>color-theme</code>, <code>featuresets</code>, <code>iconsets</code>; paint: <code>fill-extrusion-ambient-occlusion-*</code>, <code>flood-light-*</code>, <code>edge-radius</code> (thay bằng outset 4cm), <code>vertical-scale</code>, <code>cutoff-fade-range</code>, <code>icon-image-cross-fade</code>, <code>icon-size-scale-range</code>, <code>symbol-z-elevate</code>. Expression <code>random</code> chưa verify.</p></section>`;
-sections.push({ id: 'mapzone', title: '★ MapZone extensions', count: 26, html: extHtml });
+<p class="doc" style="max-width:72ch">Layer <code>clip</code>/<code>building</code>; source <code>raster-array</code>; <code>fog</code>, <code>color-theme</code>, <code>featuresets</code>, <code>iconsets</code>; paint: <code>fill-extrusion-flood-light-*</code>, <code>cutoff-fade-range</code>, <code>icon-size-scale-range</code>, <code>symbol-z-elevate</code>; <code>shadow-draw-before-layer</code>. <code>icon-image-cross-fade</code> không trộn lúc runtime (xem mục ảnh 2 biến thể ở trên). Expression <code>random</code>, <code>measure-light</code> chưa hỗ trợ. Đang phát triển, chưa phát hành: <code>fill-extrusion-edge-radius</code>, <code>fill-extrusion-rounded-roof</code> (bo cạnh building).</p></section>`;
+sections.push({ id: 'mapzone', title: '★ MapZone extensions', count: EXT_COUNT, html: extHtml });
 
 // ---- assemble page
 const nav = sections.map(s => `<a href="#${s.id.startsWith('type_') ? s.id : s.id}" data-nav>${esc(s.title)} <em>${s.count}</em></a>`).join('');
@@ -285,6 +339,7 @@ section > h2 { font-size:20px; margin:46px 0 6px; font-weight:650; }
 .chip.t { background:var(--accent-soft); color:var(--accent); font-weight:600; }
 .chip.pt { background:var(--amber-soft); color:var(--amber); font-weight:600; }
 .chip.req { background:var(--amber-soft); color:var(--amber); font-weight:700; }
+.chip.new { background:var(--teal-soft); color:var(--teal); font-weight:700; }
 .support { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 8px; }
 .plat { font-size:11.5px; font-weight:650; border-radius:5px; padding:2px 8px; }
 .plat.ok { background:var(--teal-soft); color:var(--teal); }
@@ -312,10 +367,10 @@ footer { grid-column:1/-1; padding:20px 18px 60px; color:var(--muted); font-size
 <main>
   <p style="color:var(--muted);max-width:72ch">Tài liệu tra cứu đầy đủ kiểu <i>docs.mapbox.com/style-spec/reference</i>, sinh tự động từ <code>@maplibre/maplibre-gl-style-spec</code> (bản fork validate thật) — mô tả prop giữ nguyên tiếng Anh của spec; phần khung + hợp đồng MapZone bằng tiếng Việt. Gõ vào ô lọc để tìm prop bất kỳ.</p>
   <div class="forknote" style="border-left-color:var(--accent);background:var(--accent-soft)">
-  <b>Hỗ trợ 3 nền tảng MapZone</b> — mỗi prop có hàng chip <span class="plat ok">Web ✓</span> <span class="plat ok">Android ✓</span> <span class="plat ok">iOS ✓</span>: cột Web = fork MapLibre GL JS; Android/iOS = core maplibre-native mà SDK <code>13.3.1-mapzone.1</code> build từ đó (hover chip để xem phiên bản upstream bắt đầu hỗ trợ). <span class="plat dd">data-driven ✓</span> = prop nhận expression theo feature. Riêng phần mở rộng của mình xem mục <a href="#mapzone">★ MapZone extensions</a> — trạng thái đo từ code fork, không phải upstream.</div>
+  <b>Hỗ trợ 3 nền tảng MapZone</b> — mỗi prop có hàng chip <span class="plat ok">Web ✓</span> <span class="plat ok">Android ✓</span> <span class="plat ok">iOS ✓</span>: cột Web = fork MapLibre GL JS; Android/iOS = core maplibre-native mà SDK <code>13.3.1-mapzone.1</code> build từ đó (hover chip để xem phiên bản upstream bắt đầu hỗ trợ). <span class="plat dd">data-driven ✓</span> = prop nhận expression theo feature. Riêng phần mở rộng của mình xem mục <a href="#buildings3d">★ Building 3D</a> và <a href="#mapzone">★ MapZone extensions</a> — trạng thái đo từ code fork, không phải upstream. Mục đánh dấu <span class="chip new">mới 10/2026</span> (và các key route/symbol/slot ở MapZone extensions) có trong bản SDK phát hành sau <code>13.3.1-mapzone.1</code>.</div>
   ${sections.map(s => s.html).join('\n')}
 </main>
-<footer>Sinh bởi <code>gen-spec-reference.cjs</code> từ spec ${esc(String(SPEC.$version))} · hợp đồng fork: <code>STYLE-SPEC-SURFACE.md</code> @ web <code>1cd52e0</code> / native <code>f6a5b8b</code> · 2026-07-08</footer>
+<footer>Sinh tự động từ style spec v${esc(String(SPEC.$version))} + hợp đồng MapZone · cập nhật 2026-10-20</footer>
 </div>
 <script>
 const q = document.getElementById('q');

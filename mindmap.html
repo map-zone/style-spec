@@ -207,7 +207,7 @@ mindmap
   <tr><td><code>["match", x, a, ra, rb]</code></td><td>switch/case: x==a → ra, else rb</td><td>582</td></tr>
   <tr><td><code>["interpolate", ["linear"], ["zoom"], 16,0, 18,3]</code></td><td>nội suy theo zoom: z16→0, z18→3</td><td>314 (zoom: 303)</td></tr>
   <tr><td><code>["case", đk, a, b]</code></td><td>if/else</td><td>270</td></tr>
-  <tr><td><code>["config","lightPreset"]</code></td><td>đọc biến người dùng chỉnh (schema) — <em>fork bake thành hằng lúc load</em></td><td>877</td></tr>
+  <tr><td><code>["config","lightPreset"]</code></td><td>đọc biến người dùng chỉnh (schema) — <em>fork: <code>lightPreset</code> đổi được lúc runtime (từ 13.3.1-mapzone.5), config khác cố định lúc load</em></td><td>877</td></tr>
   <tr><td><code>["step", ["zoom"], a, 16, b]</code></td><td>bậc thang: dưới z16 → a, từ z16 → b</td><td>166</td></tr>
 </table></div>
 <div class="answer">Mẹo đọc nhanh: gặp mảng lồng sâu, <strong>đọc từ ngoài vào và chỉ hỏi "hàm gì? input camera (zoom) hay input feature (get)?"</strong> — camera-input thì cả layer đổi theo zoom; feature-input thì từng đối tượng một khác nhau (data-driven, tốn thêm buffer GPU).</div>
