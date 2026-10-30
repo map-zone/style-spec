@@ -127,19 +127,19 @@ const MODEL_PROPS = [
   ['model-color', 'Màu nhuộm (tint) trộn vào vật liệu gốc của glTF.', [1,1,1]],
   ['model-color-mix-intensity', '0 → giữ nguyên texture gốc, 1 → nhuộm hoàn toàn bằng model-color. Standard dùng đổi màu cây theo mùa/preset.', [1,1,1]],
   ['model-scale', '[x,y,z] hệ số phóng.', [1,1,1]],
-  ['model-rotation', '[x,y,z] độ xoay quanh từng trục.', [1,1,1]],
+  ['model-rotation', '[x,y,z] độ xoay quanh từng trục; hằng số, theo zoom hoặc theo dữ liệu (mỗi feature một hướng).', [1,1,1]],
   ['model-translation', '[x,y,z] mét dịch chuyển.', [1,1,1]],
   ['model-emissive-strength', 'Tự phát sáng — Standard tăng ban đêm (cửa sổ landmark).', [1,1,1]],
   ['model-ambient-occlusion-intensity', 'Cường độ AO bake trong glTF.', [1,1,1]],
-  ['model-cast-shadows', 'Model đổ bóng xuống đất/nhà (shadow pipeline).', [1,0,0]],
-  ['model-receive-shadows', 'Model nhận bóng từ vật khác.', [1,0,0]],
-  ['model-roughness', 'Override roughness của vật liệu PBR.', [1,0,0]],
+  ['model-cast-shadows', 'Model đổ bóng xuống đất, nhà và model khác khi đèn <code>directional</code> có <code>cast-shadows: true</code> (mặc định true). Từ 13.3.1-mapzone.6: mọi nền tảng, gồm cả landmark batched-model.', [1,1,1]],
+  ['model-receive-shadows', 'Model nhận bóng từ vật khác (mặc định true). Từ 13.3.1-mapzone.6: mọi nền tảng.', [1,1,1]],
+  ['model-roughness', 'Override roughness của vật liệu PBR cho landmark Standard (batched-model, theo part); model glTF thường đọc roughness từ vật liệu riêng. Native (Vulkan/Metal) từ 13.3.1-mapzone.6.', [1,1,1]],
   ['model-cutoff-fade-range', 'Fade model ở rìa vùng nhìn (giảm pop-in).', [1,0,0]],
-  ['model-height-based-emissive-strength-multiplier', 'Emissive tăng theo chiều cao (tầng cao sáng hơn về đêm).', [1,0,0]],
+  ['model-height-based-emissive-strength-multiplier', 'Emissive tăng theo chiều cao cho landmark Standard (tầng cao sáng hơn về đêm). Native (Vulkan/Metal) từ 13.3.1-mapzone.6.', [1,1,1]],
   ['model-elevation-reference', 'Neo model theo mặt đất hay mặt đường trên cao (HD).', [1,0,0]],
 ];
 let modelHtml = `<section id="models3d"><h2>Models 3D — <code>model</code> / <code>batched-model</code> <span class="cnt">${MODEL_PROPS.length}</span></h2>
-<p class="intro">Port từ Mapbox v3 — <b>không có trong spec v8 upstream</b>. Đã kiểm chứng trên cả 3 nền tảng với full Mapbox Standard 3D (buildings + cây + landmark).</p>
+<p class="intro">Port từ Mapbox v3 — <b>không có trong spec v8 upstream</b>. Đã kiểm chứng trên cả 3 nền tảng với full Mapbox Standard 3D (buildings + cây + landmark). Từ 13.3.1-mapzone.6, model glTF có vật liệu được chiếu sáng như Mapbox (vật liệu PBR metallic-roughness: kim loại, độ nhám, tự phát sáng của đèn xe…) và đổ / nhận bóng.</p>
 <div class="forknote">Model đến từ <b>hai đường dữ liệu</b>: ① root <code>models</code> (map id → URL glTF) + feature trong vector tile mang tham chiếu model → vẽ GPU-instanced (ví dụ cây); ② source <code>batched-model</code> (mesh 3D building nén <b>Draco</b>).</div>`;
 for (const [k, doc, sup] of MODEL_PROPS) {
   const id = 'model3d-' + k.replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -149,7 +149,7 @@ for (const [k, doc, sup] of MODEL_PROPS) {
 modelHtml += `<h3 class="exprgroup">Source · batched-model</h3>
 <article class="prop mz" id="model3d-src" data-name="batched-model source">
 <h4><a href="#model3d-src"><code class="exprname">{"type":"batched-model","url":"mapbox://mapbox.mapbox-3dbuildings-v1"}</code></a></h4>${mzSupport([1,1,1])}
-<p class="doc">Tileset mesh 3D building nén Draco. Khi style có batched-model, fill-extrusion cùng footprint được hạ height 0 để không vẽ chồng khối lên landmark.</p></article></section>`;
+<p class="doc">Tileset mesh 3D building nén Draco. Từ 13.3.1-mapzone.6: building (<code>building</code> / <code>procedural_buildings</code>) đè lên chân đế landmark bị ẩn đúng thuật toán <code>ReplacementSource</code> của Mapbox (SAT có đệm, overlap ≤ 1 unit vẫn giữ) thay vì hạ height 0.</p></article></section>`;
 sections.push({ id: 'models3d', title: '★ Models 3D', count: MODEL_PROPS.length + 1, html: modelHtml });
 
 // ---- Building 3D (fill-extrusion, Mapbox v3) — property THẬT giữ tên Mapbox (không phải metadata).
@@ -167,6 +167,10 @@ const BUILDING_PROPS = [
     'Bán kính quầng tối mềm trên mặt đất quanh chân nhà (cần đèn v3). Style VietMap: <code>step</code> zoom → 0 dưới z17, 5 từ z17.', [1,1,1]],
   ['fill-extrusion-ambient-occlusion-ground-attenuation', 'paint · number 0..1 · mặc định 0.69 · zoom-expr · transition',
     'Độ tắt dần của quầng tối mặt đất theo khoảng cách tới tường.', [1,1,1]],
+  ['fill-extrusion-edge-radius', 'layout · number (m) 0..1 · mặc định 0 · hằng số',
+    'Bo vát cạnh building: vát tường vào mái một đoạn r mét (giống bevel). Từ 13.3.1-mapzone.3.', [1,1,1]],
+  ['fill-extrusion-rounded-roof', 'paint · boolean · mặc định true · zoom-expr',
+    '<code>false</code> giữ mái vuông (không hạ theo <code>edge-radius</code>) dù edge-radius &gt; 0. Từ 13.3.1-mapzone.3.', [1,1,1]],
 ];
 let bldHtml = `<section id="buildings3d"><h2>Building 3D — fill-extrusion kiểu Mapbox v3 <span class="cnt">${BUILDING_PROPS.length}</span></h2>
 <p class="intro">Các key của Mapbox v3 dưới đây là <b>property thật</b> trong spec của fork, <b>giữ nguyên tên Mapbox</b>: viết thẳng trong <code>paint</code>, đổi lúc runtime bằng <code>setPaintProperty</code>. Style Mapbox v3 dùng các key này nạp thẳng vào MapZone SDK, không cần sửa. Kết quả render được đối chiếu pixel với Mapbox GL JS 3.21.</p>
@@ -254,6 +258,7 @@ const EXT = [
     ['fill-emissive-strength · line-emissive-strength', 'Viết thẳng trong <code>paint</code> của style Mapbox v3 (fork lưu ở <code>maplibre:fill-emissive-strength</code> / <code>maplibre:line-emissive-strength</code>): 0 = chiếu sáng hoàn toàn theo đèn v3, 1 = giữ nguyên màu của layer; hằng số hoặc theo zoom. Chỉ có tác dụng khi style có đèn v3.', [1,1,1]],
     ['Bóng đổ của đường HD trên cao', 'Đèn <code>directional</code> có <code>cast-shadows: true</code>: cầu / đường trên cao đổ bóng xuống mặt đất và các lớp 2D bên dưới (độ đậm theo <code>shadow-intensity</code>).', [1,1,1]],
     ['Android: Style.setStandardLightShadowsEnabled(boolean)', 'Bật / tắt bóng đổ của đèn v3 lúc runtime (tiết kiệm GPU / pin trên máy yếu).', [0,1,0]],
+    ['maplibre:background-emissive-strength', 'Viết thẳng <code>background-emissive-strength</code> trong <code>paint</code> của style Mapbox v3 (fork lưu ở metadata): nền (background) được chiếu sáng theo ground radiance của đèn v3 — mặt đất không có dữ liệu tối đi ban đêm đúng như Mapbox. Standard: 0.1 ở z13, theo <code>measure-light</code> từ z14. Từ 13.3.1-mapzone.6.', [1,1,1]],
   ]],
   ['Root / khác', [
     ['maplibre:mapbox-standard-lights (root metadata)', 'Lights v3 đã resolve config — native parse thành standard-lights.', [1,1,1]],
@@ -280,7 +285,7 @@ for (const [g, items] of EXT) {
   }
 }
 extHtml += `<h3 class="exprgroup">Cố ý KHÔNG hỗ trợ (đừng tìm trong fork)</h3>
-<p class="doc" style="max-width:72ch">Layer <code>clip</code>/<code>building</code>; source <code>raster-array</code>; <code>fog</code>, <code>color-theme</code>, <code>featuresets</code>, <code>iconsets</code>; paint: <code>fill-extrusion-flood-light-*</code>, <code>cutoff-fade-range</code>, <code>icon-size-scale-range</code>, <code>symbol-z-elevate</code>; <code>shadow-draw-before-layer</code>. <code>icon-image-cross-fade</code> không trộn lúc runtime (xem mục ảnh 2 biến thể ở trên). Expression <code>random</code>, <code>measure-light</code> chưa hỗ trợ. Đang phát triển, chưa phát hành: <code>fill-extrusion-edge-radius</code>, <code>fill-extrusion-rounded-roof</code> (bo cạnh building).</p></section>`;
+<p class="doc" style="max-width:72ch">Layer <code>clip</code>/<code>building</code>; source <code>raster-array</code>; <code>fog</code>, <code>color-theme</code>, <code>featuresets</code>, <code>iconsets</code>; paint: <code>fill-extrusion-flood-light-*</code>, <code>cutoff-fade-range</code>, <code>icon-size-scale-range</code>, <code>symbol-z-elevate</code>; <code>shadow-draw-before-layer</code>. <code>icon-image-cross-fade</code> không trộn lúc runtime (xem mục ảnh 2 biến thể ở trên). Expression <code>random</code> (đúng thuật toán Mapbox từ 13.3.1-mapzone.6) và <code>measure-light</code> (từ 13.3.1-mapzone.5) đã hỗ trợ — xem mục Đèn v3 / Expressions.</p></section>`;
 sections.push({ id: 'mapzone', title: '★ MapZone extensions', count: EXT_COUNT, html: extHtml });
 
 // ---- assemble page

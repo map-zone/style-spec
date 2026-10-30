@@ -7,7 +7,7 @@ Tài liệu tra cứu **style-spec** cho MapZone Maps SDK (fork MapLibre) — ki
 
 | Trang | Nội dung |
 |---|---|
-| [Reference](https://map-zone.github.io/style-spec/) (`index.html`) | Mọi property/expression của spec v8 (MapLibre) + **ma trận hỗ trợ Web/Android/iOS** + 26 khóa mở rộng `maplibre:*` của MapZone. Có ô lọc nhanh. |
+| [Reference](https://map-zone.github.io/style-spec/) (`index.html`) | Mọi property/expression của spec v8 (MapLibre) + **ma trận hỗ trợ Web/Android/iOS** + 38 khóa mở rộng `maplibre:*` của MapZone. Có ô lọc nhanh. |
 | [Mindmap](https://map-zone.github.io/style-spec/mindmap.html) | Sơ đồ tư duy: style JSON qua 4 câu hỏi, giải phẫu layer, cheat-sheet expression, pipeline. |
 
 Trang này là **tài liệu API** cho người viết style — dùng kèm SDK
